@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>每日记账本</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        
+        .header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            background-color: #111;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .view-toggle {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background-color: #111;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .income-value {
+            color: #fff;
+        }
+        
+        .expense-value {
+            color: #fff;
+        }
+        
+        .balance-value {
+            color: #fff;
+            font-size: 24px;
+        }
+        
+        .daily-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: #151515;
+            border-bottom: 1px solid #333;
+        }
+        
+        .daily-stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .daily-stat .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+        
+        .daily-stat .value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .input-section {
+            padding: 25px 20px;
+            background-color: #111;
+            border-bottom: 1px solid #333;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #ddd;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 15px;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #555;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .income-btn {
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+        
+        .expense-btn {
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+        
+        .history-section {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .history-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .clear-btn {
+            background: none;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .date-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+        
+        .date-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .date-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ddd;
+        }
+        
+        .date-total {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #111;
+            border-radius: 8px;
+            border-left: 4px solid #333;
+        }
+        
+        .transaction-income {
+            border-left-color: #4a4a4a;
+        }
+        
+        .transaction-expense {
+            border-left-color: #333;
+        }
+        
+        .transaction-info {
+            flex: 1;
+        }
+        
+        .transaction-amount {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .transaction-income .transaction-amount {
+            color: #fff;
+        }
+        
+        .transaction-expense .transaction-amount {
+            color: #fff;
+        }
+        
+        .transaction-purpose {
+            font-size: 16px;
+            color: #ccc;
+            margin-top: 4px;
+        }
+        
+        .transaction-time {
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* 响应式设计 */
+        @media (min-width: 768px) {
+            body {
+                max-width: 500px;
+                margin: 0 auto;
+                border-left: 1px solid #333;
+                border-right: 1px solid #333;
+            }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+        
+        /* 数字输入框的增减按钮 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .monthly-summary {
+            background-color: #151515;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .monthly-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+        
+        .monthly-stats {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .monthly-stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .monthly-stat .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+        
+        .monthly-stat .value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>每日记账本</h1>
+        <button class="view-toggle" id="viewToggle">日视图</button>
+    </div>
+    
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-label">总收入</div>
+            <div class="stat-value income-value" id="totalIncome">¥0.00</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">总支出</div>
+            <div class="stat-value expense-value" id="totalExpense">¥0.00</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">当前余额</div>
+            <div class="stat-value balance-value" id="currentBalance">¥0.00</div>
+        </div>
+    </div>
+    
+    <div class="daily-stats">
+        <div class="daily-stat">
+            <div class="label">今日收入</div>
+            <div class="value" id="todayIncome">¥0.00</div>
+        </div>
+        <div class="daily-stat">
+            <div class="label">今日支出</div>
+            <div class="value" id="todayExpense">¥0.00</div>
+        </div>
+        <div class="daily-stat">
+            <div class="label">本月支出</div>
+            <div class="value" id="monthExpense">¥0.00</div>
+        </div>
+    </div>
+    
+    <div class="input-section">
+        <div class="input-group">
+            <label for="amount">金额</label>
+            <input type="number" id="amount" placeholder="输入金额" min="0" step="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="purpose">用途/备注</label>
+            <input type="text" id="purpose" placeholder="输入用途或备注">
+        </div>
+        
+        <div class="button-group">
+            <button class="income-btn" id="incomeBtn">存入</button>
+            <button class="expense-btn" id="expenseBtn">花销</button>
+        </div>
+    </div>
+    
+    <div class="history-section">
+        <div class="history-header">
+            <div class="history-title">交易记录</div>
+            <button class="clear-btn" id="clearBtn">清空记录</button>
+        </div>
+        
+        <div class="monthly-summary">
+            <div class="monthly-title" id="monthTitle">本月统计</div>
+            <div class="monthly-stats">
+                <div class="monthly-stat">
+                    <div class="label">本月收入</div>
+                    <div class="value" id="monthIncome">¥0.00</div>
+                </div>
+                <div class="monthly-stat">
+                    <div class="label">本月支出</div>
+                    <div class="value" id="monthExpenseSummary">¥0.00</div>
+                </div>
+                <div class="monthly-stat">
+                    <div class="label">本月结余</div>
+                    <div class="value" id="monthBalance">¥0.00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="transactionContainer">
+            <!-- 交易记录将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // 初始化数据
+        let transactions = JSON.parse(localStorage.getItem('daily_transactions')) || [];
+        let isDailyView = true;
+        
+        // DOM 元素
+        const amountInput = document.getElementById('amount');
+        const purposeInput = document.getElementById('purpose');
+        const incomeBtn = document.getElementById('incomeBtn');
+        const expenseBtn = document.getElementById('expenseBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const viewToggle = document.getElementById('viewToggle');
+        const transactionContainer = document.getElementById('transactionContainer');
+        
+        // 统计元素
+        const totalIncomeElement = document.getElementById('totalIncome');
+        const totalExpenseElement = document.getElementById('totalExpense');
+        const currentBalanceElement = document.getElementById('currentBalance');
+        const todayIncomeElement = document.getElementById('todayIncome');
+        const todayExpenseElement = document.getElementById('todayExpense');
+        const monthExpenseElement = document.getElementById('monthExpense');
+        const monthTitleElement = document.getElementById('monthTitle');
+        const monthIncomeElement = document.getElementById('monthIncome');
+        const monthExpenseSummaryElement = document.getElementById('monthExpenseSummary');
+        const monthBalanceElement = document.getElementById('monthBalance');
+        
+        // 初始化应用
+        function initApp() {
+            updateStatistics();
+            renderTransactionList();
+            
+            // 事件监听
+            incomeBtn.addEventListener('click', addIncome);
+            expenseBtn.addEventListener('click', addExpense);
+            clearBtn.addEventListener('click', clearAllTransactions);
+            viewToggle.addEventListener('click', toggleView);
+            
+            // 输入框回车键支持
+            amountInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addIncome();
+                }
+            });
+            
+            purposeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addIncome();
+                }
+            });
+        }
+        
+        // 更新统计信息
+        function updateStatistics() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentMonth = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0');
+            
+            // 计算总额
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const currentBalance = totalIncome - totalExpense;
+            
+            // 计算今日数据
+            const todayIncome = transactions
+                .filter(t => t.type === 'income' && t.date === today)
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const todayExpense = transactions
+                .filter(t => t.type === 'expense' && t.date === today)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            // 计算本月数据
+            const monthIncome = transactions
+                .filter(t => t.type === 'income' && t.date.startsWith(currentMonth))
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const monthExpense = transactions
+                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            // 更新显示
+            totalIncomeElement.textContent = `¥${totalIncome.toFixed(2)}`;
+            totalExpenseElement.textContent = `¥${totalExpense.toFixed(2)}`;
+            currentBalanceElement.textContent = `¥${currentBalance.toFixed(2)}`;
+            todayIncomeElement.textContent = `¥${todayIncome.toFixed(2)}`;
+            todayExpenseElement.textContent = `¥${todayExpense.toFixed(2)}`;
+            monthExpenseElement.textContent = `¥${monthExpense.toFixed(2)}`;
+            
+            // 更新月度统计
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                               '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            monthTitleElement.textContent = `${now.getFullYear()}年${monthNames[now.getMonth()]}统计`;
+            monthIncomeElement.textContent = `¥${monthIncome.toFixed(2)}`;
+            monthExpenseSummaryElement.textContent = `¥${monthExpense.toFixed(2)}`;
+            monthBalanceElement.textContent = `¥${(monthIncome - monthExpense).toFixed(2)}`;
+        }
+        
+        // 添加收入
+        function addIncome() {
+            const amount = parseFloat(amountInput.value);
+            const purpose = purposeInput.value.trim() || '存款';
+            
+            if (!amount || amount <= 0) {
+                alert('请输入有效金额！');
+                return;
+            }
+            
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            const time = now.toTimeString().split(' ')[0].substring(0, 5);
+            
+            const transaction = {
+                id: Date.now(),
+                type: 'income',
+                amount: amount,
+                purpose: purpose,
+                date: date,
+                time: time,
+                timestamp: now.getTime()
+            };
+            
+            transactions.push(transaction);
+            saveData();
+            updateStatistics();
+            renderTransactionList();
+            
+            // 自动清零输入框
+            amountInput.value = '';
+            purposeInput.value = '';
+            amountInput.focus();
+        }
+        
+        // 添加支出
+        function addExpense() {
+            const amount = parseFloat(amountInput.value);
+            const purpose = purposeInput.value.trim() || '消费';
+            
+            if (!amount || amount <= 0) {
+                alert('请输入有效金额！');
+                return;
+            }
+            
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            const time = now.toTimeString().split(' ')[0].substring(0, 5);
+            
+            const transaction = {
+                id: Date.now(),
+                type: 'expense',
+                amount: amount,
+                purpose: purpose,
+                date: date,
+                time: time,
+                timestamp: now.getTime()
+            };
+            
+            transactions.push(transaction);
+            saveData();
+            updateStatistics();
+            renderTransactionList();
+            
+            // 自动清零输入框
+            amountInput.value = '';
+            purposeInput.value = '';
+            amountInput.focus();
+        }
+        
+        // 渲染交易列表
+        function renderTransactionList() {
+            if (transactions.length === 0) {
+                transactionContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div>还没有任何交易记录</div>
+                        <div style="font-size: 14px; margin-top: 5px;">开始记录你的第一笔交易吧！</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按日期分组交易
+            const transactionsByDate = {};
+            transactions.forEach(transaction => {
+                if (!transactionsByDate[transaction.date]) {
+                    transactionsByDate[transaction.date] = [];
+                }
+                transactionsByDate[transaction.date].push(transaction);
+            });
+            
+            // 按日期排序（最新的在前）
+            const sortedDates = Object.keys(transactionsByDate).sort((a, b) => {
+                return new Date(b) - new Date(a);
+            });
+            
+            let html = '';
+            
+            sortedDates.forEach(date => {
+                const dateTransactions = transactionsByDate[date].sort((a, b) => b.timestamp - a.timestamp);
+                const dateObj = new Date(date);
+                const today = new Date().toISOString().split('T')[0];
+                
+                let dateDisplay;
+                if (date === today) {
+                    dateDisplay = '今天';
+                } else {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if (date === yesterday.toISOString().split('T')[0]) {
+                        dateDisplay = '昨天';
+                    } else {
+                        dateDisplay = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+                    }
+                }
+                
+                // 计算该日期的总收入与总支出
+                const dateIncome = dateTransactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                    
+                const dateExpense = dateTransactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                html += `
+                    <div class="date-section">
+                        <div class="date-header">
+                            <div class="date-title">${dateDisplay}</div>
+                            <div class="date-total">收入: ¥${dateIncome.toFixed(2)} | 支出: ¥${dateExpense.toFixed(2)}</div>
+                        </div>
+                        <div class="transaction-list">
+                `;
+                
+                dateTransactions.forEach(transaction => {
+                    if (transaction.type === 'income') {
+                        html += `
+                            <div class="transaction-item transaction-income">
+                                <div class="transaction-info">
+                                    <div class="transaction-amount">+¥${transaction.amount.toFixed(2)}</div>
+                                    <div class="transaction-purpose">${transaction.purpose}</div>
+                                </div>
+                                <div class="transaction-time">${transaction.time}</div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="transaction-item transaction-expense">
+                                <div class="transaction-info">
+                                    <div class="transaction-amount">-¥${transaction.amount.toFixed(2)}</div>
+                                    <div class="transaction-purpose">${transaction.purpose}</div>
+                                </div>
+                                <div class="transaction-time">${transaction.time}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            transactionContainer.innerHTML = html;
+        }
+        
+        // 切换视图（日视图/月视图）
+        function toggleView() {
+            isDailyView = !isDailyView;
+            viewToggle.textContent = isDailyView ? '日视图' : '月视图';
+            // 这里可以添加月视图的逻辑
+            renderTransactionList();
+        }
+        
+        // 清空所有记录
+        function clearAllTransactions() {
+            if (confirm('确定要清空所有交易记录吗？此操作不可撤销！')) {
+                transactions = [];
+                saveData();
+                updateStatistics();
+                renderTransactionList();
+            }
+        }
+        
+        // 保存数据到本地存储
+        function saveData() {
+            localStorage.setItem('daily_transactions', JSON.stringify(transactions));
+        }
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
